@@ -236,7 +236,16 @@ class MainApp(tk.Tk):
         # 上部メニュー
         menubar = tk.Menu(self)
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="バージョン情報", command=lambda: messagebox.showinfo("情報", "ツインビデオデュエット2Pic v1.0.1 (Python/OpenCV)"))
+        
+        # バージョン情報にサードパーティのクレジットを明記
+        about_text = (
+            "ツインビデオデュエット2Pic v1.0.0\n\n"
+            "【サードパーティ・クレジット】\n"
+            "・OpenCV (opencv-python) - Apache License 2.0\n"
+            "・Pillow - MIT-CMU License\n\n"
+            "Copyright c 2026 ranorat"
+        )
+        help_menu.add_command(label="バージョン情報", command=lambda: messagebox.showinfo("バージョン情報", about_text))
         menubar.add_cascade(label="ヘルプ", menu=help_menu)
         self.config(menu=menubar)
 
@@ -303,8 +312,8 @@ class MainApp(tk.Tk):
         self.lbl_diff = tk.Label(action_frame, text="時間差: 0ms (フレーム差: 0)", width=32, font=("Meiryo", 10, "bold"))
         self.lbl_diff.pack(pady=5)
 
-        # ステータスバー
-        status_bar = tk.Label(self, text="py_twin_video_duet2pic v1.0.0 | Copyright c 2026 ranorat", anchor="e", fg="gray", font=("Meiryo", 8))
+        # ステータスバー（クレジット情報を含めた表示）
+        status_bar = tk.Label(self, text="JTwinVideoDuet2Pic v1.0.0 | Libraries: OpenCV, Pillow | Copyright c 2026 ranorat", anchor="e", fg="gray", font=("Meiryo", 8))
         status_bar.pack(side=tk.BOTTOM, fill=tk.X, padx=5)
 
     def on_window_resize(self, event):
@@ -435,7 +444,6 @@ class MainApp(tk.Tk):
         if not self.pane_l.cap and not self.pane_r.cap:
             return
             
-        # 初回は空欄、2回目以降は前回入力したファイル名を初期値にする
         file_path = filedialog.asksaveasfilename(
             defaultextension=".png",
             filetypes=[("PNG画像", "*.png")],
@@ -448,10 +456,8 @@ class MainApp(tk.Tk):
         dir_name = os.path.dirname(file_path)
         base_name = os.path.splitext(os.path.basename(file_path))[0]
         
-        # 入力されたファイル名を次回のために記憶
         self.last_saved_filename = base_name
         
-        # 左右それぞれの動画ファイル名
         name_l = self.pane_l.file_basename if self.pane_l.file_basename else "left"
         name_r = self.pane_r.file_basename if self.pane_r.file_basename else "right"
         
