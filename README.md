@@ -1,7 +1,7 @@
 # py_twin_video_duet2pic
 
 ●本ソフトについて  
-・javaFXによる実装では、メモリ過度なメモリ消費が発生するため、Pythonでの実装に変更した。
+・javaFXによる実装では、メモリ過度なメモリ消費が発生するため、Pythonでの実装に変更した。  
 ・１つ又は２つのファイルを左右の描画領域に展開し、フレーム単位(コマ送り・戻し)で調整して  
 　立体視用のステレオ画像を静止画として取り出すためだけのツールです。  
 ・動画ファイルを一つ、又は二つ選択しD&Dして読み込みます。  
@@ -26,8 +26,8 @@
 ・フリーソフトとして公開します。外部ライブラリを同梱していないため  
 　MIT License　を適用します。  
 
-・OpenCV (opencv-python): Apache License 2.0
-・Pillow: MIT-CMU License
-・Python標準ライブラリ: Python Software Foundation License
+・OpenCV (opencv-python): Apache License 2.0  
+・Pillow: MIT-CMU License  
+・Python標準ライブラリ: Python Software Foundation License  
  
 .
