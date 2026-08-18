@@ -30,9 +30,14 @@ class VideoPlayerPane(tk.LabelFrame):
         self.is_playing = False
         self.play_job = None
         
-        # 描画領域（アスペクト比を維持しつつウィンドウサイズの変化に完全追従）
-        self.canvas_label = tk.Label(self, bg="black", anchor="center")
-        self.canvas_label.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        # 修正: 描画領域のサイズが画像によって勝手に拡張されないよう、サイズを固定する親フレームを配置
+        canvas_container = tk.Frame(self, bg="black")
+        canvas_container.pack(fill=tk.BOTH, expand=True, padx=2, pady=2)
+        canvas_container.pack_propagate(False)  # 子要素(Label)のサイズ変更による親の拡大を完全に阻止する
+
+        # 描画領域
+        self.canvas_label = tk.Label(canvas_container, bg="black", anchor="center")
+        self.canvas_label.pack(fill=tk.BOTH, expand=True)
         
         # コントロールUI
         row1 = tk.Frame(self)
@@ -134,8 +139,8 @@ class VideoPlayerPane(tk.LabelFrame):
         w = self.canvas_label.winfo_width()
         h = self.canvas_label.winfo_height()
         
-        if w < 10: w = 100
-        if h < 10: h = 100
+        if w < 10: w = 300 
+        if h < 10: h = 200
 
         # 元画像のサイズ
         img_w, img_h = img.size
@@ -215,6 +220,9 @@ class VideoPlayerPane(tk.LabelFrame):
 
 
 class MainApp(tk.Tk):
+    # バージョン定数をクラス変数として定義
+    VERSION = "1.0.0"
+
     def __init__(self):
         super().__init__()
         self.title("ツインビデオデュエット2Pic (Python版)")
@@ -239,7 +247,7 @@ class MainApp(tk.Tk):
         
         # バージョン情報にサードパーティのクレジットを明記
         about_text = (
-            "ツインビデオデュエット2Pic v1.0.0\n\n"
+            f"ツインビデオデュエット2Pic v{MainApp.VERSION}\n\n"
             "【サードパーティ・クレジット】\n"
             "・OpenCV (opencv-python) - Apache License 2.0\n"
             "・Pillow - MIT-CMU License\n\n"
@@ -313,7 +321,7 @@ class MainApp(tk.Tk):
         self.lbl_diff.pack(pady=5)
 
         # ステータスバー（クレジット情報を含めた表示）
-        status_bar = tk.Label(self, text="JTwinVideoDuet2Pic v1.0.0 | Libraries: OpenCV, Pillow | Copyright c 2026 ranorat", anchor="e", fg="gray", font=("Meiryo", 8))
+        status_bar = tk.Label(self, text=f"JTwinVideoDuet2Pic v{MainApp.VERSION} | Libraries: OpenCV, Pillow | Copyright c 2026 ranorat", anchor="e", fg="gray", font=("Meiryo", 8))
         status_bar.pack(side=tk.BOTTOM, fill=tk.X, padx=5)
 
     def on_window_resize(self, event):
@@ -444,36 +452,59 @@ class MainApp(tk.Tk):
         if not self.pane_l.cap and not self.pane_r.cap:
             return
             
+        init_file = f"{self.last_saved_filename}.png" if self.last_saved_filename else ""
+
         file_path = filedialog.asksaveasfilename(
             defaultextension=".png",
             filetypes=[("PNG画像", "*.png")],
-            initialfile=self.last_saved_filename,
+            initialfile=init_file,
             title="左右の画像を保存"
         )
         if not file_path:
             return
             
         dir_name = os.path.dirname(file_path)
-        base_name = os.path.splitext(os.path.basename(file_path))[0]
+        raw_base_name = os.path.basename(file_path)
+        base_name, _ = os.path.splitext(raw_base_name)
         
         self.last_saved_filename = base_name
         
         name_l = self.pane_l.file_basename if self.pane_l.file_basename else "left"
         name_r = self.pane_r.file_basename if self.pane_r.file_basename else "right"
         
+        # 保存用ヘルパー関数：現在の回転角度を適用する
+        def apply_rotation(frame, angle):
+            if angle == 90:
+                return cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            elif angle == 180:
+                return cv2.rotate(frame, cv2.ROTATE_180)
+            elif angle == 270:
+                return cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            return frame
+
+        # 左側保存
         if self.pane_l.cap:
             self.pane_l.cap.set(cv2.CAP_PROP_POS_FRAMES, self.pane_l.current_frame_idx)
             ret, frame = self.pane_l.cap.read()
             if ret:
                 save_path_l = os.path.join(dir_name, f"{base_name}_{name_l}[{self.pane_l.current_frame_idx}].png")
-                cv2.imwrite(save_path_l, frame)
+                # 回転適用
+                rotated_frame = apply_rotation(frame, self.pane_l.current_angle)
+                frame_rgb = cv2.cvtColor(rotated_frame, cv2.COLOR_BGR2RGB)
+                img_pil = Image.fromarray(frame_rgb)
+                img_pil.save(save_path_l)
                 
+        # 右側保存
         if self.pane_r.cap:
             self.pane_r.cap.set(cv2.CAP_PROP_POS_FRAMES, self.pane_r.current_frame_idx)
             ret, frame = self.pane_r.cap.read()
             if ret:
                 save_path_r = os.path.join(dir_name, f"{base_name}_{name_r}[{self.pane_r.current_frame_idx}].png")
-                cv2.imwrite(save_path_r, frame)
+                # 回転適用
+                rotated_frame = apply_rotation(frame, self.pane_r.current_angle)
+                frame_rgb = cv2.cvtColor(rotated_frame, cv2.COLOR_BGR2RGB)
+                img_pil = Image.fromarray(frame_rgb)
+                img_pil.save(save_path_r)
 
 
 if __name__ == "__main__":
