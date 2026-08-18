@@ -321,7 +321,7 @@ class MainApp(tk.Tk):
         self.lbl_diff.pack(pady=5)
 
         # ステータスバー（クレジット情報を含めた表示）
-        status_bar = tk.Label(self, text=f"JTwinVideoDuet2Pic v{MainApp.VERSION} | Libraries: OpenCV, Pillow | Copyright c 2026 ranorat", anchor="e", fg="gray", font=("Meiryo", 8))
+        status_bar = tk.Label(self, text=f"py_twin_video_duet2pic v{MainApp.VERSION} | Libraries: OpenCV, Pillow | Copyright c 2026 ranorat", anchor="e", fg="gray", font=("Meiryo", 8))
         status_bar.pack(side=tk.BOTTOM, fill=tk.X, padx=5)
 
     def on_window_resize(self, event):
